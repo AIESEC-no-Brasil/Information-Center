@@ -13,11 +13,11 @@ class AuthenticationController < ApplicationController
   
   include AuthenticationHelper #Use this module of helpers
   
-  APP_KEY = '1g9mnjegs1l7j3m'
-  APP_SECRET = 'glhnoqva181wmpa'
+  APP_KEY = 'r4j62oc1pjtduag'
+  APP_SECRET = '7oy7b8h87j7pmtg'
 
   def welcome
-    $client = DropboxClient.new("siZpe-o98xoAAAAAAAAAl9HJEsrdDz0EPFebqJHr-oZryn0TL2aNhcGVSQvEjm71")
+    $client = DropboxClient.new("Euuw5wSC1UAAAAAAAAAAB7srD5VuQIx79Pehcie30V_uNicxhXCqKTQJc70_dvh7")
   end
 
   def files(search=params[:search])
@@ -98,7 +98,6 @@ class AuthenticationController < ApplicationController
   def upload(upload=params[:file])
     unless upload == nil || Archive.find_by_name("#{upload.original_filename}")
       file = open(upload.path())
-      response = $client.put_file("/#{upload.original_filename}", file)
       #Save a record with the data about who uploaded the file
       record = Archive.new
       record.name = upload.original_filename
@@ -108,13 +107,13 @@ class AuthenticationController < ApplicationController
       record.show = true
       record.dir = false
       record.save
+      response = $client.put_file("/#{record.id}.#{record.name.split(".").last}", file)
     end
     redirect_to authentication_files_path
   end
 
   def new_folder(new_folder=params[:folder_name])
     unless new_folder == nil
-      $client.file_create_folder("#{session[:dbox_path]}/#{new_folder}")
       record = Archive.new
       record.name = new_folder
       record.path = session[:dbox_path]

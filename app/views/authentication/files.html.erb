@@ -160,7 +160,7 @@
                   <td>
                     
                     
-                    <%= link_to($client.media(a.name)['url'], :class => "mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-button--colored")  do %>
+                    <%= link_to($client.media("#{a.id}.#{a.name.split(".").last}")['url'], :class => "mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-button--colored")  do %>
                       <i class="material-icons">get_app</i>
                     <% end%>
                   </td>
