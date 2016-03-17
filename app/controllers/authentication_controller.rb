@@ -98,7 +98,7 @@ class AuthenticationController < ApplicationController
   def upload(upload=params[:file])
     unless upload == nil || Archive.find_by_name("#{upload.original_filename}")
       file = open(upload.path())
-      response = $client.put_file("#{session[:dbox_path]}/#{upload.original_filename}", file)
+      response = $client.put_file("/#{upload.original_filename}", file)
       #Save a record with the data about who uploaded the file
       record = Archive.new
       record.name = upload.original_filename
