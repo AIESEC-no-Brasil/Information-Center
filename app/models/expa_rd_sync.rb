@@ -2962,8 +2962,9 @@ class ExpaRdSync
         fields['email'] = [{'type' => 'home', 'value' => person.xp_email.to_s}] unless person.xp_email.nil?
         fields['telefone'] = [{'type' => 'home', 'value' => person.xp_phone.to_s}] unless person.xp_phone.nil?
         fields['cl-marcado-no-expa-nao-conta-expansao-ainda'] = entities[person.xp_home_lc.xp_name] unless person.xp_home_lc.nil?
-        fields['location-inscrito-escreve-isso-opcionalmente-no-expa'] = person.xp_location unless person.xp_location.nil?
+        fields['location-inscrito-escreve-isso-opcionalmente-no-expa'] = person.xp_location unless person.xp_location.emtpy?
 
+        puts fields
         Podio::Item.create(podio_ogcdp_leads, {:fields => fields})
         if person.control_podio.nil?
           res = {}
@@ -2993,7 +2994,7 @@ class ExpaRdSync
         fields['email'] = [{'type' => 'home', 'value' => person.xp_email.to_s}] unless person.xp_email.nil?
         fields['telefone'] = [{'type' => 'home', 'value' => person.xp_phone.to_s}] unless person.xp_phone.nil?
         fields['cl-marcado-no-expa-nao-conta-expansao-ainda'] = entities[person.xp_home_lc.xp_name] unless person.xp_home_lc.nil?
-        fields['location-inscrito-escreve-isso-opcionalmente-no-expa'] = person.xp_location unless person.xp_location.nil?
+        fields['location-inscrito-escreve-isso-opcionalmente-no-expa'] = person.xp_location unless person.xp_location.empty?
         fields['sub-produto'] = sub_product unless person.interested_sub_product.nil?
         fields['entidade-mais-proxima'] = entities[person.entity_exchange_lc.xp_name] unless person.entity_exchange_lc.nil?
         fields['como-conheceu-a-aiesec'] = ExpaPerson.how_got_to_know_aiesecs[person.how_got_to_know_aiesec] + 1 unless person.how_got_to_know_aiesec.nil?
@@ -3004,6 +3005,7 @@ class ExpaRdSync
           fields['curso'] = podio_helper_find_item_by_unique_id(courses[JSON.parse(person.control_podio)['curso']['value']],'curso').first['item_id']
         end
 
+        puts fields
         Podio::Item.create(podio_app_decided_leads, {:fields => fields})
 
         item = self.podio_helper_find_item_by_expa_id(person.xp_id)

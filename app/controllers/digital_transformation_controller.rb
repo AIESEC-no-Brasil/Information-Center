@@ -22,6 +22,10 @@ class DigitalTransformationController < ApplicationController
       return
     end
 
+    utm_campaing = params['utm_campaing'] unless params['utm_campaing'].nil?
+    utm_medium = params['utm_medium'] unless params['utm_medium'].nil?
+    utm_source = params['utm_source'] unless params['utm_source'].nil?
+
     person = ExpaPerson.find_by_xp_email(params['form_data']['email'])
     error = false
     if !ExpaPerson.exists?(person)
@@ -96,10 +100,11 @@ class DigitalTransformationController < ApplicationController
     end
 
     if error == true
-        redirect_to '/complete_cadastro?error=true&landing=' + params['landing'] + '&errorMessage=' + params['errorMessage'].each_byte.to_a.to_s.force_encoding('UTF-8') #TODO: Isso aqui e POG usando metodo GET
+        extra = '&utm_campaing=' + utm_campaing + '&utm_medium=' + utm_medium + '&utm_source' = utm_source
+        redirect_to '/complete_cadastro?error=true&landing=' + params['landing'] + extra + '&errorMessage=' + params['errorMessage'].each_byte.to_a.to_s.force_encoding('UTF-8') #TODO: Isso aqui e POG usando metodo GET
         return
     else
-      person.how_got_to_know_aiesec = @how_got_to_know_aiesec[Integer(params['form_data']['como_conheceu'])]
+      person.how_got_to_know_aiesec = Integer(params['form_data']['como_conheceu']) - 1
       office = ExpaOffice.find_by_xp_name(@entities[Integer(params['form_data']['entidade_proxima'])])
       unless ExpaOffice.exists?(office)
         office = ExpaOffice.new
@@ -128,9 +133,10 @@ class DigitalTransformationController < ApplicationController
       end
 
       if person.control_podio.nil?
-        person.control_podio = {}
+        json = person.control_podio = {}
+      else
+        json = JSON.parse(person.control_podio)
       end
-      json = {}
 
       json['podio_status'] = 'lead_decidido'
       json['escolaridade'] = {'type' => Integer(params['form_data']['escolaridade']),
@@ -149,6 +155,22 @@ class DigitalTransformationController < ApplicationController
       end
 
       person.control_podio = json.to_json.to_s
+
+      utm_campaing = params['utm_campaing'] unless params['utm_campaing'].nil?
+      utm_medium = params['utm_medium'] unless params['utm_medium'].nil?
+      utm_source = params['utm_source'] unless params['utm_source'].nil?
+
+      if person.customized_fields.nil?
+        json = person.customized_fields = {}
+      else
+        json = JSON.parse(person.customized_fields)
+      end
+
+      json['utm_campaing'] = utm_campaing unless utm_campaing.nil?
+      json['utm_medium'] = utm_medium unless utm_medium.nil?
+      json['utm_source'] = utm_source unless utm_source.nil?
+
+      person.customized_fields = json.to_json.to_s
       person.save
 
       xp_sync = ExpaRdSync.new
