@@ -655,27 +655,54 @@
   <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
   <![endif]-->
 
-  <script id="analytics_tracking_code" type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-29562174-2']);
-    if (document.domain.indexOf("aiesec.org.br") != -1) { _gaq.push(['_setDomainName', 'aiesec.org.br']); }
-    _gaq.push(['_setAllowLinker', true]);
-
-    _gaq.push(['_trackEvent', 'Forms', 'Viewed', 'RD Station Form viewed', 0, true]);
-
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+  <script>
+    function programaInteresse(sel) {
+      var value = parseInt(sel.value)
+      switch(value) {
+        case 0:
+          document.getElementById("field_sub_produto_cidadao_global").hidden = true
+          document.getElementById("field_sub_produto_talentos_globais").hidden = true
+          break;
+        case 1:
+          document.getElementById("field_sub_produto_cidadao_global").hidden = false
+          document.getElementById("field_sub_produto_talentos_globais").hidden = true
+          break;
+        case 2:
+          document.getElementById("field_sub_produto_cidadao_global").hidden = true
+          document.getElementById("field_sub_produto_talentos_globais").hidden = false
+          break;
+      }
+    }
+    function escolaridade(sel) {
+      var value = parseInt(sel.value)
+      switch(value) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+          document.getElementById("field_universidade").hidden = true
+          document.getElementById("field_curso").hidden = true
+          break;
+        case 4:
+        case 5:
+        case 6:
+          document.getElementById("field_universidade").hidden = false
+          document.getElementById("field_curso").hidden = false
+          break;
+      }
+    }
   </script>
+
 </head>
 
 <div id="form-container">
   <div id="conversion" class="wrapper">
     <header>
       <hgroup>
-        <% if params.has_key?('landing') && params['landing'] == '1' %>
+        <% if params.has_key?('landing') && params['landing'] == '0' %>
+            <h1>Conta mais pra gente</h1>
+            <h2>Assim nossa equipe poderá te ajudar ;)</h2>
+        <% elsif params.has_key?('landing') && params['landing'] == '1' %>
             <h1>Saiba como a AIESEC te dá suporte durante o seu intercâmbio</h1>
             <h2>Preencha esse formulário para ter acesso ao video explicativo</h2>
         <% elsif params.has_key?('landing') && params['landing'] == '2' %>
@@ -688,6 +715,7 @@
     <section>
       <%= form_for(:form_data ,:url => { :action => 'update' }) do |f| %>
           <% if params.has_key?('error') %>
+            <p style="color: darkorange" class="notice"><%= JSON.parse(params['errorMessage']).pack('c*').html_safe %></p>
             <p style="color: darkorange" class="notice">Certifique-se de que todos os campos foram selecionados e de que você está usando o mesmo e-mail que se cadastrou anteriormente no <a style="color: cornflowerblue" href="http://aiesec.org.br/inscricao">site da AIESEC</a></p>
           <% end %>
           <div class="field">
@@ -696,18 +724,40 @@
           </div>
           <div class="field">
             <label for="programa_interesse">Programa de interesse *</label>
-            <%= f.select 'programa_interesse', @interested_program_sub_product, :class => 'form-control required' %>
+            <%= f.select 'programa_interesse', @interested_program.each_with_index.map {|name, index| [name, index]}, {}, {:class => 'form-control required', :onChange => 'programaInteresse(this);'} %>
+          </div>
+          <div class="field" id="field_sub_produto_cidadao_global" hidden="true">
+            <label for="sub_produto_cidadao_global">Sub-produto de preferência *</label>
+            <%= f.select 'sub_produto_cidadao_global', @sub_product_global_citizen.each_with_index.map {|name, index| [name, index]}, :class => 'form-control required' %>
+          </div>
+          <div class="field" id="field_sub_produto_talentos_globais" hidden="true">
+            <label for="sub_produto_talentos_globais">Sub-produto de preferência *</label>
+            <%= f.select 'sub_produto_talentos_globais', @sub_product_global_talent.each_with_index.map {|name, index| [name, index]}, :class => 'form-control required' %>
           </div>
           <div class="field">
-            <label for="como_conheceu">Como você conheceu a AIESEC? *</label>
-            <%= f.select 'como_conheceu', @how_got_to_know_aiesec, :class => 'form-control required' %>
+            <label for="escolaridade">Grau de escolaridade</label>
+            <%= f.select 'escolaridade', @study_level.each_with_index.map {|name, index| [name, index]}, {}, {:class => 'form-control required', :onChange => 'escolaridade(this);'} %>
+          </div>
+          <div class="field" id="field_universidade" hidden="true">
+            <label for="universidade">Universidade</label>
+            <%= f.select 'universidade', @universities.each_with_index.map {|name, index| [name, index]}, :class => 'form-control required' %>
+          </div>
+          <div class="field" id="field_curso" hidden="true">
+            <label for="curso">Curso</label>
+            <%= f.select 'curso', @courses.each_with_index.map {|name, index| [name, index]}, :class => 'form-control required' %>
           </div>
           <div class="field">
-            <label for="entidade_proxima">Confirme a entidade da AIESEC mais próxima de você *</label>
-            <%= f.select 'entidade_proxima', @entities, :class => 'form-control required' %>
+            <label for="entidade_proxima">AIESEC mais próxima *</label>
+            <%= f.select 'entidade_proxima', @entities.each_with_index.map {|name, index| [name, index]}, :class => 'form-control required' %>
+          </div>
+          <div class="field">
+            <label for="como_conheceu">Como conheceu a AIESEC? *</label>
+            <%= f.select 'como_conheceu', @how_got_to_know_aiesec.each_with_index.map {|name, index| [name, index]}, :class => 'form-control required' %>
           </div>
           <div class="actions">
-            <% if params.has_key?('landing') && params['landing'] == '1' %>
+            <% if params.has_key?('landing') && params['landing'] == '0' %>
+                <%= f.submit 'Enviar', :class => 'call_button' %>
+            <% elsif params.has_key?('landing') && params['landing'] == '1' %>
                 <%= f.submit 'Abrir video', :class => 'call_button' %>
             <% elsif params.has_key?('landing') && params['landing'] == '2' %>
                 <%= f.submit 'Baixar ebook', :class => 'call_button' %>

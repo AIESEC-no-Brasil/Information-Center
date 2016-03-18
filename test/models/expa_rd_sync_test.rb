@@ -21,6 +21,29 @@ class ExpaRdSyncTest < Minitest::Test
     end
   end
 
+  def test_update_podio
+    office = ExpaOffice.new
+    office.xp_name = 'BRASILIA'
+    office.save
+
+    person = ExpaPerson.new
+    person.xp_full_name = 'teste'
+    person.xp_status = 'open'
+    person.xp_created_at = Time.now
+    person.xp_id = 123456
+    person.xp_email = 'teste@teste.com'
+    person.xp_phone = '+55111234567'
+    person.xp_location = 'Teste, Brasilândia :)'
+    person.xp_home_lc = office
+    person.interested_program = 'global_talents'
+    person.interested_sub_product = 5
+    person.entity_exchange_lc = office
+    person.save
+
+    xp_sync = ExpaRdSync.new
+    xp_sync.update_podio
+  end
+
   def test_insert_new_register_at_db
     assert(ExpaPerson.all.count == 0, 'DB have registers. Make sure to clean DB before run tests, and it has ' + ExpaPerson.all.count.to_s)
 
