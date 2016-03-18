@@ -2961,24 +2961,7 @@ class ExpaRdSync
         person.save
       end
     end
-
-
-    person = people.first
-    res = JSON.parse(person.control_podio)
-    res['podio_status'] = 'lead_decidido'
-    res['universidade'] = {'type' => 2,
-                           'value' => 'ADJETIVO-CETEP - FACULDADE ADJETIVO CETEP'}
-    res['curso'] = {'type' => 3,
-                    'value' => 'Administracao Legislativa'}
-    person.control_podio = res.to_json.to_s
-    person.how_got_to_know_aiesec = 0
-    person.save
-
-
-
-
-
-
+    
     people = ExpaPerson.where.not(control_podio: nil)
     people.each do |person|
       if JSON.parse(person.control_podio).key?('podio_status') && JSON.parse(person.control_podio)['podio_status'] == 'lead_decidido'
