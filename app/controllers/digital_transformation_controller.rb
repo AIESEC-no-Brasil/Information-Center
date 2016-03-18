@@ -100,7 +100,7 @@ class DigitalTransformationController < ApplicationController
     end
 
     if error == true
-        extra = '&utm_campaing=' + utm_campaing + '&utm_medium=' + utm_medium + '&utm_source' = utm_source
+        extra = '&utm_campaing=' + utm_campaing + '&utm_medium=' + utm_medium + '&utm_source=' + utm_source
         redirect_to '/complete_cadastro?error=true&landing=' + params['landing'] + extra + '&errorMessage=' + params['errorMessage'].each_byte.to_a.to_s.force_encoding('UTF-8') #TODO: Isso aqui e POG usando metodo GET
         return
     else
