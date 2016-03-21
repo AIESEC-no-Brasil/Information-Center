@@ -5,10 +5,18 @@ class DigitalTransformationController < ApplicationController
   # GET /complete_cadastro
   def index
     set_fields
-    unless params.has_key?('landing')
+    unless params.has_key?('landing') &&
+        (params['landing'] == '0' ||
+        params['landing'] == '1' ||
+        params['landing'] == '2' )
       redirect_to 'http://aiesec.org.br'
       return
     end
+  end
+
+  # GET /complete_cadastro_update_thank
+  def thank
+
   end
 
   # POST /
@@ -28,10 +36,10 @@ class DigitalTransformationController < ApplicationController
 
     person = ExpaPerson.find_by_xp_email(params['form_data']['email'])
     error = false
-    if params['form_data']['email']
+    if params['form_data']['email'].blank?
       error = true
       params['errorMessage'] = "Campo 'E-mail cadastrado' deve ser preenchido"
-    elsif params['form_data']['telefone']
+    elsif params['form_data']['telefone'].blank?
       error = true
       params['errorMessage'] = "Campo 'Confirme seu telefone' deve ser preenchido"
     elsif !ExpaPerson.exists?(person)
@@ -146,6 +154,13 @@ class DigitalTransformationController < ApplicationController
 
       xp_sync = ExpaRdSync.new
       case params['landing']
+        when '0' then
+          if person.interested_program == 'global_volunteer'
+            xp_sync.send_to_rd(person, nil, xp_sync.rd_identifiers[:landing_0], xp_sync.rd_tags[:gcdp])
+          elsif person.interested_program == 'global_talents'
+            xp_sync.send_to_rd(person, nil, xp_sync.rd_identifiers[:landing_0], xp_sync.rd_tags[:gip])
+          end
+          redirect_to '/complete_cadastro_update_thank'
         when '1' then
           if person.interested_program == 'global_volunteer'
             xp_sync.send_to_rd(person, nil, xp_sync.rd_identifiers[:landing_1], xp_sync.rd_tags[:gcdp])

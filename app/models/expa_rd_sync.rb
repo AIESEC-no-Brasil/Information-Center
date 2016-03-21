@@ -8,6 +8,7 @@ class ExpaRdSync
         :test => 'test', #This is the identifier that should always be used during test phase
         :expa => 'expa',
         :open => 'open',
+        :landing_0 => 'completou-cadastro',
         :landing_1 => 'form-video-suporte-aiesec',
         :landing_2 => '15-dicas-para-planejar-sua-viagem-sem-imprevistos',
         :in_progress => 'in_progress',
