@@ -87,7 +87,7 @@ class ExpaRdSync
                  'Joinville' => 306818877,
                  'LIMEIRA' => 335437867,
                  'LIMEIRA (LC CLOSED)' => 335437867,
-                 'LONDRINA' => 3751474,
+                 'LONDRINA' => 306817769,
                  'MACEIO' => 362629308,
                  'MANAUS' => 306817297,
                  'MARILIA' => 362629660,
@@ -2951,32 +2951,6 @@ class ExpaRdSync
                'Web Design E Programacao' => 'Curso0000000003',
                'Zootecnia' => 'Curso0000000002'}
 
-    people = ExpaPerson.where(xp_status: 0)
-    people.each do |person|
-      if person.control_podio.nil? || !JSON.parse(person.control_podio).key?('podio_status')
-        podio_ogcdp_leads = 15290822
-        fields = {}
-        fields['data-inscricao'] = {'start' => person.xp_created_at.strftime('%Y-%m-%d %H:%M:%S').to_s } unless person.xp_created_at.nil?
-        fields['title'] = person.xp_full_name.to_s unless person.xp_full_name.nil?
-        fields['expa-id'] = person.xp_id.to_i unless person.xp_id.nil?
-        fields['email'] = [{'type' => 'home', 'value' => person.xp_email.to_s}] unless person.xp_email.nil?
-        fields['telefone'] = [{'type' => 'home', 'value' => person.xp_phone.to_s}] unless person.xp_phone.nil?
-        fields['cl-marcado-no-expa-nao-conta-expansao-ainda'] = entities[person.xp_home_lc.xp_name] unless person.xp_home_lc.nil?
-        fields['location-inscrito-escreve-isso-opcionalmente-no-expa'] = person.xp_location unless person.xp_location.emtpy?
-
-        puts fields
-        Podio::Item.create(podio_ogcdp_leads, {:fields => fields})
-        if person.control_podio.nil?
-          res = {}
-        else
-          res = JSON.parse(person.control_podio)
-        end
-        res['podio_status'] = 'podio_lead'
-        person.control_podio = res.to_json.to_s
-        person.save
-      end
-    end
-
     people = ExpaPerson.where.not(control_podio: nil)
     people.each do |person|
       if JSON.parse(person.control_podio).key?('podio_status') && JSON.parse(person.control_podio)['podio_status'] == 'lead_decidido'
@@ -2994,7 +2968,7 @@ class ExpaRdSync
         fields['email'] = [{'type' => 'home', 'value' => person.xp_email.to_s}] unless person.xp_email.nil?
         fields['telefone'] = [{'type' => 'home', 'value' => person.xp_phone.to_s}] unless person.xp_phone.nil?
         fields['cl-marcado-no-expa-nao-conta-expansao-ainda'] = entities[person.xp_home_lc.xp_name] unless person.xp_home_lc.nil?
-        fields['location-inscrito-escreve-isso-opcionalmente-no-expa'] = person.xp_location unless person.xp_location.empty?
+        fields['location-inscrito-escreve-isso-opcionalmente-no-expa'] = person.xp_location unless person.xp_location.blank?
         fields['sub-produto'] = sub_product unless person.interested_sub_product.nil?
         fields['entidade-mais-proxima'] = entities[person.entity_exchange_lc.xp_name] unless person.entity_exchange_lc.nil?
         fields['como-conheceu-a-aiesec'] = ExpaPerson.how_got_to_know_aiesecs[person.how_got_to_know_aiesec] + 1 unless person.how_got_to_know_aiesec.nil?
@@ -3013,6 +2987,32 @@ class ExpaRdSync
 
         res = JSON.parse(person.control_podio)
         res['podio_status'] = 'podio_final'
+        person.control_podio = res.to_json.to_s
+        person.save
+      end
+    end
+
+    people = ExpaPerson.where(xp_status: 0)
+    people.each do |person|
+      if person.control_podio.nil? || !JSON.parse(person.control_podio).key?('podio_status')
+        podio_ogcdp_leads = 15290822
+        fields = {}
+        fields['data-inscricao'] = {'start' => person.xp_created_at.strftime('%Y-%m-%d %H:%M:%S').to_s } unless person.xp_created_at.nil?
+        fields['title'] = person.xp_full_name.to_s unless person.xp_full_name.nil?
+        fields['expa-id'] = person.xp_id.to_i unless person.xp_id.nil?
+        fields['email'] = [{'type' => 'home', 'value' => person.xp_email.to_s}] unless person.xp_email.nil?
+        fields['telefone'] = [{'type' => 'home', 'value' => person.xp_phone.to_s}] unless person.xp_phone.nil?
+        fields['cl-marcado-no-expa-nao-conta-expansao-ainda'] = entities[person.xp_home_lc.xp_name] unless person.xp_home_lc.nil?
+        fields['location-inscrito-escreve-isso-opcionalmente-no-expa'] = person.xp_location unless person.xp_location.blank?
+
+        puts fields
+        Podio::Item.create(podio_ogcdp_leads, {:fields => fields})
+        if person.control_podio.nil?
+          res = {}
+        else
+          res = JSON.parse(person.control_podio)
+        end
+        res['podio_status'] = 'podio_lead'
         person.control_podio = res.to_json.to_s
         person.save
       end
