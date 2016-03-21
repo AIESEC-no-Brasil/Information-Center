@@ -28,75 +28,45 @@ class DigitalTransformationController < ApplicationController
 
     person = ExpaPerson.find_by_xp_email(params['form_data']['email'])
     error = false
-    if !ExpaPerson.exists?(person)
+    if params['form_data']['email']
       error = true
-      value = "Erro com seu e-mail. Certifique-se de que digitou correto ou se cadastre no nosso portal de oportunidades clicando <a href='aiesec.org.br/inscricao'>aqui</a><br>"
-      params['errorMessage'] = value
+      params['errorMessage'] = "Campo 'E-mail cadastrado' deve ser preenchido"
+    elsif params['form_data']['telefone']
+      error = true
+      params['errorMessage'] = "Campo 'Confirme seu telefone' deve ser preenchido"
+    elsif !ExpaPerson.exists?(person)
+      error = true
+      params['errorMessage'] = "Erro com seu e-mail. Certifique-se de que digitou correto ou se cadastre no nosso portal de oportunidades clicando <a href='aiesec.org.br/inscricao'>aqui</a>"
     elsif params['form_data']['programa_interesse'] == '0'
       error = true
-      value = "Campo 'Programa de Interesse' deve ser preenchido<br>"
-      if params['errorMessage'].nil?
-        params['errorMessage'] = value
-      else
-        params['errorMessage'] = params['errorMessage'].to_s + value
-      end
+      params['errorMessage'] = "Campo 'Programa de Interesse' deve ser preenchido"
     elsif (params['form_data']['programa_interesse'] == '1' &&
         params['form_data']['sub_produto_cidadao_global'] == '0') ||
         (params['form_data']['programa_interesse'] == '2' &&
         params['form_data']['sub_produto_talentos_globais'] == '0')
       error = true
-      value = "Campo 'Sub-produto de preferencia' deve ser preenchido<br>"
-      if params['errorMessage'].nil?
-        params['errorMessage'] = value
-      else
-        params['errorMessage'] = params['errorMessage'].to_s + value
-      end
+      params['errorMessage'] = "Campo 'Sub-produto de preferencia' deve ser preenchido"
     elsif params['form_data']['escolaridade'] == '0'
       error = true
-      value = "Campo 'Grau de escolaridade' deve ser preenchido<br>"
-      if params['errorMessage'].nil?
-        params['errorMessage'] = value
-      else
-        params['errorMessage'] = params['errorMessage'].to_s + value
-      end
+      params['errorMessage'] = "Campo 'Grau de escolaridade' deve ser preenchido"
     elsif (params['form_data']['escolaridade'] == '4' ||
         params['form_data']['escolaridade'] == '5' ||
         params['form_data']['escolaridade'] == '6') &&
         params['form_data']['universidade'] == '0'
       error = true
-      value = "Campo 'Universidade' deve ser preenchido<br>"
-      if params['errorMessage'].nil?
-        params['errorMessage'] = value
-      else
-        params['errorMessage'] = params['errorMessage'].to_s + value
-      end
+      params['errorMessage'] = "Campo 'Universidade' deve ser preenchido"
     elsif (params['form_data']['escolaridade'] == '4' ||
         params['form_data']['escolaridade'] == '5' ||
         params['form_data']['escolaridade'] == '6') &&
         params['form_data']['curso'] == '0'
       error = true
-      value = "Campo 'Curso' deve ser preenchido<br>"
-      if params['errorMessage'].nil?
-        params['errorMessage'] = value
-      else
-        params['errorMessage'] = params['errorMessage'].to_s + value
-      end
+      params['errorMessage'] = "Campo 'Curso' deve ser preenchido"
     elsif params['form_data']['entidade_proxima'].equal?('0')
       error = true
-      value = "Campo 'AIESEC mais proxima' deve ser preenchido<br>"
-      if params['errorMessage'].nil?
-        params['errorMessage'] = value
-      else
-        params['errorMessage'] = params['errorMessage'].to_s + value
-      end
+      params['errorMessage'] = "Campo 'AIESEC mais proxima' deve ser preenchido"
     elsif params['form_data']['como_conheceu'] == '0'
     error = true
-    value = "Campo 'Como conheceu a AIESEC?' deve ser preenchido<br>"
-      if params['errorMessage'].nil?
-        params['errorMessage'] = value
-      else
-        params['errorMessage'] = params['errorMessage'].to_s + value
-      end
+    params['errorMessage'] = "Campo 'Como conheceu a AIESEC?' deve ser preenchido"
     end
 
     if error == true
@@ -166,7 +136,8 @@ class DigitalTransformationController < ApplicationController
         json = JSON.parse(person.customized_fields)
       end
 
-      json['utm_campaing'] = utm_campaing unless utm_campaing.nil?
+      json['telefone'] = params['form_data']['telefone'] unless params['form_data']['telefone'].nil?
+      json['utm_campaign'] = utm_campaing unless utm_campaing.nil?
       json['utm_medium'] = utm_medium unless utm_medium.nil?
       json['utm_source'] = utm_source unless utm_source.nil?
 

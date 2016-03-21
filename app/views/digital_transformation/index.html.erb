@@ -723,6 +723,10 @@
             <%= f.text_field 'email', :class => 'form-control required' %>
           </div>
           <div class="field">
+            <label for="telefone">Confirme seu telefone (lembre-se do DDD)*</label>
+            <%= f.text_field 'telefone', {:class => 'form-control required', :placeholder => '+55 (XX) 55555-5555'}  %>
+          </div>
+          <div class="field">
             <label for="programa_interesse">Programa de interesse *</label>
             <%= f.select 'programa_interesse', @interested_program.each_with_index.map {|name, index| [name, index]}, {}, {:class => 'form-control required', :onChange => 'programaInteresse(this);'} %>
           </div>
