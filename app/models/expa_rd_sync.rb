@@ -2986,7 +2986,7 @@ class ExpaRdSync
         fields['sub-produto'] = sub_product unless person.interested_sub_product.nil?
         fields['entidade-mais-proxima'] = entities[person.entity_exchange_lc.xp_name] unless person.entity_exchange_lc.nil?
         fields['como-conheceu-a-aiesec'] = ExpaPerson.how_got_to_know_aiesecs[person.how_got_to_know_aiesec] + 1 unless person.how_got_to_know_aiesec.nil?
-        fields['escolaridade'] = study_level.index(person.control_podio['escolaridade']['value'])
+        fields['escolaridade'] = study_level.index(JSON.parse(person.control_podio)['escolaridade']['value'])
         if JSON.parse(person.control_podio).key?('universidade')
           fields['universidade'] = podio_helper_find_item_by_unique_id(universities[JSON.parse(person.control_podio)['universidade']['value']],'universidade').first['item_id']
         end
