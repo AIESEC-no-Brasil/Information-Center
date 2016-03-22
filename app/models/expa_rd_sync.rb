@@ -2968,7 +2968,7 @@ class ExpaRdSync
         fields['expa-id'] = person.xp_id.to_i unless person.xp_id.nil?
         fields['email'] = [{'type' => 'home', 'value' => person.xp_email.to_s}] unless person.xp_email.nil?
         if !person.customized_fields.nil? && JSON.parse(person.customized_fields).key?('telefone')
-          fields['telefone'] = [{'type' => 'home', 'value' => JSON.parse(person.customized_fields)['podio_status']}]
+          fields['telefone'] = [{'type' => 'home', 'value' => JSON.parse(person.customized_fields)['telefone']}]
         elsif !person.xp_phone.nil?
           fields['telefone'] = [{'type' => 'home', 'value' => person.xp_phone.to_s}]
         end
@@ -2989,7 +2989,7 @@ class ExpaRdSync
         Podio::Item.create(podio_app_decided_leads, {:fields => fields})
 
         item = self.podio_helper_find_item_by_expa_id(person.xp_id).first
-        if !item.nil? && item.has_key?('item_id')
+        if !item.nil?
           Podio::Item.delete(item['item_id'])
 
           res = JSON.parse(person.control_podio)
