@@ -137,8 +137,8 @@ class ExpaRdSync
                  'PUC SP' => 306817495,
                  'PUC' => 306817495,
                  'SAO PAULO - UNIDADE PUC' => 306817495,
-                 'USP' => 306817495,
-                 'SAO PAULO - UNIDADE USP' => 306817495,
+                 'USP' => 306811162,
+                 'SAO PAULO - UNIDADE USP' => 306811162,
                  'SOROCABA' => 306825137,
                  'TERESINA' => 340037977,
                  'UBERABA' =>362630742,
@@ -3037,36 +3037,38 @@ class ExpaRdSync
           JSON.parse(person.control_podio).key?('telefone_status') == false
 
         item = podio_helper_find_item_by_expa_id(person.xp_id).first
-        fields = item['fields']
-        location_index = telephone_index = fields.count
+        unless item.nil?
+          fields = item['fields']
+          location_index = telephone_index = fields.count
 
-        for i in 0...fields.count
-          telephone_index = i if fields[i]['external_id'] == 'telefone'
-          location_index = i if fields[i]['external_id'] == 'location-inscrito-escreve-isso-opcionalmente-no-expa'
-        end
-
-        unless person.xp_phone.nil? || person.xp_location.blank?
-          fields_to_update = {}
-          if telephone_index == fields.count || fields[telephone_index]['values'][0]['value'] != person.xp_phone
-            fields_to_update['telefone'] = [{'type' => 'home', 'value' => person.xp_phone.to_s}] unless person.xp_phone.nil?
-          end
-          if location_index == fields.count || fields[location_index]['values'][0]['value'] != person.xp_location
-            fields_to_update['location-inscrito-escreve-isso-opcionalmente-no-expa'] = person.xp_location unless person.xp_location.blank?
+          for i in 0...fields.count
+            telephone_index = i if fields[i]['external_id'] == 'telefone'
+            location_index = i if fields[i]['external_id'] == 'location-inscrito-escreve-isso-opcionalmente-no-expa'
           end
 
-          unless fields_to_update.empty?
-            Podio::Item.update(item['item_id'], {:fields => fields_to_update})
-
-            if person.control_podio.nil?
-              json = person.control_podio = {}
-            else
-              json = JSON.parse(person.control_podio)
+          unless person.xp_phone.nil? || person.xp_location.blank?
+            fields_to_update = {}
+            if telephone_index == fields.count || fields[telephone_index]['values'][0]['value'] != person.xp_phone
+              fields_to_update['telefone'] = [{'type' => 'home', 'value' => person.xp_phone.to_s}] unless person.xp_phone.nil?
+            end
+            if location_index == fields.count || fields[location_index]['values'][0]['value'] != person.xp_location
+              fields_to_update['location-inscrito-escreve-isso-opcionalmente-no-expa'] = person.xp_location unless person.xp_location.blank?
             end
 
-            json['telefone_status' => true]
+            unless fields_to_update.empty?
+              Podio::Item.update(item['item_id'], {:fields => fields_to_update})
 
-            person.control_podio = json.to_json.to_s
-            person.save
+              if person.control_podio.nil?
+                json = person.control_podio = {}
+              else
+                json = JSON.parse(person.control_podio)
+              end
+
+              json['telefone_status' => true]
+
+              person.control_podio = json.to_json.to_s
+              person.save
+            end
           end
         end
       end
