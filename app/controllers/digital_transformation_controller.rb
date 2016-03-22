@@ -69,7 +69,7 @@ class DigitalTransformationController < ApplicationController
         params['form_data']['curso'] == '0'
       error = true
       params['errorMessage'] = "Campo 'Curso' deve ser preenchido"
-    elsif params['form_data']['entidade_proxima'].equal?('0')
+    elsif params['form_data']['entidade_proxima'] == '0'
       error = true
       params['errorMessage'] = "Campo 'AIESEC mais proxima' deve ser preenchido"
     elsif params['form_data']['como_conheceu'] == '0'
