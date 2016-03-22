@@ -2989,12 +2989,14 @@ class ExpaRdSync
         Podio::Item.create(podio_app_decided_leads, {:fields => fields})
 
         item = self.podio_helper_find_item_by_expa_id(person.xp_id).first
-        Podio::Item.delete(item['item_id'])
+        if !item.nil? && item.has_key?('item_id')
+          Podio::Item.delete(item['item_id'])
 
-        res = JSON.parse(person.control_podio)
-        res['podio_status'] = 'podio_final'
-        person.control_podio = res.to_json.to_s
-        person.save
+          res = JSON.parse(person.control_podio)
+          res['podio_status'] = 'podio_final'
+          person.control_podio = res.to_json.to_s
+          person.save
+        end
       end
     end
 
