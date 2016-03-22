@@ -2967,9 +2967,9 @@ class ExpaRdSync
         fields['title'] = person.xp_full_name.to_s unless person.xp_full_name.nil?
         fields['expa-id'] = person.xp_id.to_i unless person.xp_id.nil?
         fields['email'] = [{'type' => 'home', 'value' => person.xp_email.to_s}] unless person.xp_email.nil?
-        if JSON.parse(person.customized_fields).key?('telefone')
+        if !person.customized_fields.nil? && JSON.parse(person.customized_fields).key?('telefone')
           fields['telefone'] = [{'type' => 'home', 'value' => JSON.parse(person.customized_fields)['podio_status']}]
-        elsif person.xp_phone.nil?
+        elsif !person.xp_phone.nil?
           fields['telefone'] = [{'type' => 'home', 'value' => person.xp_phone.to_s}]
         end
         fields['telefone'] = [{'type' => 'home', 'value' => person.xp_phone.to_s}] unless person.xp_phone.nil?
