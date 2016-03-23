@@ -8,7 +8,7 @@ require 'json'
 # @author Mauro Victor
 class AuthenticationController < ApplicationController
 # Class that control the Authenticatiom system and its views
-  
+  skip_before_action :verify_authenticity_token
   layout 'login', :only => [:login]
   
   include AuthenticationHelper #Use this module of helpers
@@ -20,18 +20,17 @@ class AuthenticationController < ApplicationController
     $client = DropboxClient.new("Euuw5wSC1UAAAAAAAAAAB7srD5VuQIx79Pehcie30V_uNicxhXCqKTQJc70_dvh7")
   end
 
-  def files(search=params[:search])
-    if search == nil 
+  def files
+    if params[:search] == nil 
       @archives = Archive.where({show: true, path: session[:dbox_path]})
     else
       files_list = Archive.all.pluck(:name)
       search_list = Array.new
       files_list.each do |f|
-        search_list << f.to_s if f.to_s.include?(search)
+        search_list << f.to_s if f.to_s.include?(params[:search])
       end
       @archives = Archive.where({show: true, path: session[:dbox_path], name: search_list})
     end
-
   end
 
   def login 
@@ -163,6 +162,23 @@ class AuthenticationController < ApplicationController
     session[:dbox_path] = session[:dbox_path].split("/")[0...-1].join("/") + "/"
     redirect_to authentication_files_path
   end
-  
-  
+
+  def filter(search=params[:search])
+    if search == nil 
+      @archives = Archive.where({show: true, path: session[:dbox_path]})
+    else
+      files_list = Archive.all.pluck(:name)
+      search_list = Array.new
+      files_list.each do |f|
+        search_list << f.to_s if f.to_s.include?(search)
+      end
+      @archives = Archive.where({show: true, path: session[:dbox_path], name: search_list})
+    end
+    respond_to do |format|
+      format.js
+      format.html
+    end
+  end
+
+
 end

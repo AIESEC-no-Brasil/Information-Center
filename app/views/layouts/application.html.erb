@@ -77,7 +77,7 @@
           <span> 
 
           </span>
-            <%= form_tag(controller: :authentication, action: :files) do %> 
+            <%= form_tag(controller: :authentication, action: :files, html: {id: 'search_form'}) do %> 
               <%= label_tag "Pesquisa"%>
               <%= text_field_tag "search" %>
 

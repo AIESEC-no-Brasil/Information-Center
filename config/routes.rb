@@ -40,6 +40,8 @@ Rails.application.routes.draw do
 
   post 'back' => 'authentication#go_back'
 
+  post 'authentication/filter'
+
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
