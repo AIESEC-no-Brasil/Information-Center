@@ -1,8 +1,8 @@
 GIT
   remote: http://github.com/AIESEC-no-Brasil/expa-rb
-  revision: 75c44bce4deb392e7cff273952007f66f97885f7
+  revision: 4a100432f897aea032d4e4994062f28ae510bb21
   specs:
-    expa (0.1.0.1)
+    expa (0.1.0.2)
 
 GEM
   remote: https://rubygems.org/
@@ -128,7 +128,7 @@ GEM
     net-http-persistent (2.9.4)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
-    net-ssh (3.0.2)
+    net-ssh (3.1.0)
     nokogiri (1.6.7.2)
       mini_portile2 (~> 2.0.0.rc2)
     ntlm-http (0.1.1)
@@ -214,9 +214,8 @@ GEM
       coffee-rails
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
-    uglifier (2.7.2)
-      execjs (>= 0.3.0)
-      json (>= 1.8.0)
+    uglifier (3.0.0)
+      execjs (>= 0.3.0, < 3)
     unf (0.1.4)
       unf_ext
     unf_ext (0.0.7.2)
