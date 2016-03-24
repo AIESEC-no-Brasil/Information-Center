@@ -2966,7 +2966,7 @@ class ExpaRdSync
                'Web Design E Programacao' => 'Curso0000000003',
                'Zootecnia' => 'Curso0000000002'}
 
-    people = ExpaPerson.where.not(control_podio: nil)
+    people = ExpaPerson.where.not(control_podio: nil).order(xp_updated_at: :desc)
     people.each do |person|
       if JSON.parse(person.control_podio).key?('podio_status') && JSON.parse(person.control_podio)['podio_status'] == 'lead_decidido'
         if person.interested_program == 'global_volunteer'
@@ -3013,7 +3013,7 @@ class ExpaRdSync
       end
     end
 
-    people = ExpaPerson.where(xp_status: 0)
+    people = ExpaPerson.where(xp_status: 0).order(xp_updated_at: :desc)
     people.each do |person|
       if person.control_podio.nil? || !JSON.parse(person.control_podio).key?('podio_status')
         podio_ogcdp_leads = 15290822
