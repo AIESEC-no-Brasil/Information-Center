@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160222043414) do
+ActiveRecord::Schema.define(version: 20160328210852) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -28,10 +28,14 @@ ActiveRecord::Schema.define(version: 20160222043414) do
     t.string   "xp_url"
     t.integer  "xp_status"
     t.integer  "xp_current_status"
+    t.text     "xp_permissions"
     t.datetime "xp_created_at"
     t.datetime "xp_updated_at"
-    t.datetime "created_at",        null: false
-    t.datetime "updated_at",        null: false
+    t.integer  "xp_opportunity_id"
+    t.boolean  "xp_interviewed",    default: false
+    t.integer  "xp_person_id"
+    t.datetime "created_at",                        null: false
+    t.datetime "updated_at",                        null: false
   end
 
   create_table "expa_offices", force: :cascade do |t|
@@ -41,6 +45,23 @@ ActiveRecord::Schema.define(version: 20160222043414) do
     t.string   "xp_url"
     t.datetime "created_at",   null: false
     t.datetime "updated_at",   null: false
+  end
+
+  create_table "expa_opportunities", force: :cascade do |t|
+    t.integer  "xp_id"
+    t.string   "xp_title"
+    t.string   "xp_url"
+    t.integer  "xp_status"
+    t.string   "xp_location"
+    t.text     "xp_programmes"
+    t.integer  "xp_office_id"
+    t.integer  "xp_application_count"
+    t.date     "xp_earliest_start_date"
+    t.date     "xp_latest_end_date"
+    t.date     "xp_applications_close_date"
+    t.string   "xp_profile_photo_url"
+    t.datetime "created_at",                 null: false
+    t.datetime "updated_at",                 null: false
   end
 
   create_table "expa_people", force: :cascade do |t|

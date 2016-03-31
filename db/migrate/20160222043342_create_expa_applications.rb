@@ -7,10 +7,15 @@ class CreateExpaApplications < ActiveRecord::Migration
       t.column :xp_status, :integer #enum
       t.column :xp_current_status, :integer #enum
       #t.column :xp_favourite, :string
-      #t.column :xp_permissions, :string
+      t.column :xp_permissions, :text
       t.column :xp_created_at, :timestamp
       t.column :xp_updated_at, :timestamp
-      #t.column :xp_opportunity, : string
+
+      #new
+      t.column :xp_opportunity_id, :integer #foreigner_key (expa_opportunity)
+      t.column :xp_interviewed, :boolean, default: false #done
+      t.column :xp_person_id, :integer #foreigner_key lazy (expa_people)
+
 
       t.timestamps null: false
     end

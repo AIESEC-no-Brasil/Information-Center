@@ -21,67 +21,77 @@ class ExpaRdSyncTest < Minitest::Test
     end
   end
 
-  def test_update_podio
-    office = ExpaOffice.new
-    office.xp_name = 'BRASILIA'
-    office.save
-
-    person = ExpaPerson.new
-    person.xp_full_name = 'teste'
-    person.xp_status = 'open'
-    person.xp_created_at = Time.now
-    person.xp_id = 123456
-    person.xp_email = 'teste@teste.com'
-    person.xp_phone = '+55111234567'
-    person.xp_location = 'Teste, Brasilândia :)'
-    person.xp_home_lc = office
-    person.interested_program = 'global_talents'
-    person.interested_sub_product = 5
-    person.entity_exchange_lc = office
-    person.save
-
-    xp_sync = ExpaRdSync.new
-    xp_sync.update_podio
-  end
-
   def test_insert_new_register_at_db
     assert(ExpaPerson.all.count == 0, 'DB have registers. Make sure to clean DB before run tests, and it has ' + ExpaPerson.all.count.to_s)
 
     params = {'per_page' => 1}
-    person = EXPA::Peoples.list_by_param(params)[0]
+    xp_person = EXPA::Peoples.list_by_param(params).first
     xp_sync = ExpaRdSync.new
-    xp_sync.update_db_peoples(person)
+    xp_sync.update_db_peoples(xp_person)
 
     assert(ExpaPerson.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaPerson.all.count.to_s)
+
+    assert(ExpaApplication.all.count == 0, 'Db have registers. Make sure to clean DB before run tests, and it has ' + ExpaApplication.all.count.to_s)
+
+    params = {'per_page' => 1}
+    xp_application = EXPA::Applications.list_by_param(params).first
+    xp_sync = ExpaRdSync.new
+    xp_sync.update_db_applications(xp_application)
   end
 
   def test_update_people_that_are_already_on_db
     assert(ExpaPerson.all.count == 0, 'DB have registers. Make sure to clean DB before run tests, and it has ' + ExpaPerson.all.count.to_s)
 
     params = {'per_page' => 2}
-    people = EXPA::Peoples.list_by_param(params)
-    person = people[0]
-    another_person = people[1]
+    xp_people = EXPA::Peoples.list_by_param(params)
+    xp_person = xp_people.first
+    another_person = xp_people.second
 
     xp_sync = ExpaRdSync.new
-    xp_sync.update_db_peoples(person)
+    xp_sync.update_db_peoples(xp_person)
     assert(ExpaPerson.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaPerson.all.count.to_s)
 
-    xp_sync.update_db_peoples(person)
+    xp_sync.update_db_peoples(xp_person)
     assert(ExpaPerson.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaPerson.all.count.to_s)
 
-    same_person = person.clone
-    same_person.full_name = person.full_name + ' test'
+    same_person = xp_person.clone
+    same_person.full_name = xp_person.full_name + ' test'
 
-    xp_sync.update_db_peoples(person)
+    xp_sync.update_db_peoples(xp_person)
     assert(ExpaPerson.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaPerson.all.count.to_s)
     xp_sync.update_db_peoples(same_person)
     assert(ExpaPerson.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaPerson.all.count.to_s)
-    assert(ExpaPerson.first.xp_full_name = same_person.full_name, "DB didn' updated the register. Name should be " + same_person.full_name + " but it is " + ExpaPerson.first.xp_full_name)
+    assert(ExpaPerson.first.xp_full_name == same_person.full_name, "DB didn' updated the register. Name should be '" + same_person.full_name + "' but it is '" + ExpaPerson.first.xp_full_name + "'")
 
 
     xp_sync.update_db_peoples(another_person)
-    assert(ExpaPerson.all.count == 1, 'DB should have only 2 registers, but it has ' + ExpaPerson.all.count.to_s)
+    assert(ExpaPerson.all.count == 2, 'DB should have only 2 registers, but it has ' + ExpaPerson.all.count.to_s)
+
+    assert(ExpaApplication.all.count == 0, 'DB have registers. Make sure to clean DB before run tests, and it has ' + ExpaApplication.all.count.to_s)
+
+    params = {'per_page' => 2}
+    xp_applications = EXPA::Applications.list_by_param(params)
+    xp_application = xp_applications.first
+    another_xp_application = xp_applications.second
+
+    xp_sync = ExpaRdSync.new
+    xp_sync.update_db_applications(xp_application)
+    assert(ExpaApplication.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaApplication.all.count.to_s)
+
+    xp_sync.update_db_applications(xp_application)
+    assert(ExpaApplication.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaApplication.all.count.to_s)
+
+    same_xp_application = xp_application.clone
+    same_xp_application.url = xp_application.url + ' test'
+
+    xp_sync.update_db_applications(xp_application)
+    assert(ExpaApplication.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaApplication.all.count.to_s)
+    xp_sync.update_db_applications(same_xp_application)
+    assert(ExpaApplication.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaApplication.all.count.to_s)
+    assert(ExpaApplication.first.url == same_xp_application.url, "DB didn' updated the register. Name should be " + same_xp_application.url + " but it is " + ExpaApplication.first.url)
+
+    xp_sync.update_db_peoples(another_xp_application)
+    assert(ExpaApplication.all.count == 2, 'DB should have only 2 registers, but it has ' + ExpaApplication.all.count.to_s)
   end
 
   def test_insert_every_application_from_person_at_db
@@ -100,6 +110,7 @@ class ExpaRdSyncTest < Minitest::Test
     xp_sync.update_db_peoples(person)
 
     assert(ExpaPerson.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaPerson.all.count.to_s)
+    assert(ExpaApplication.all.count > 0, 'Applications fomr user were not saved at database')
     assert(ExpaApplication.all.count == applications.count, 'DB should have ' + applications.count.to_s + ' registers , but it has ' + ExpaApplication.all.count.to_s)
   end
 
@@ -119,6 +130,7 @@ class ExpaRdSyncTest < Minitest::Test
     xp_sync.update_db_peoples(person)
 
     assert(ExpaPerson.all.count == 1, 'DB should have only 1 register, but it has ' + ExpaPerson.all.count.to_s)
+    assert(ExpaApplication.all.count > 0, 'Applications fomr user were not saved at database')
     assert(ExpaApplication.all.count == applications.count, 'DB should have ' + applications.count.to_s + ' registers , but it has ' + ExpaApplication.all.count.to_s)
   end
 end

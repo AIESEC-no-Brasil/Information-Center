@@ -6,6 +6,7 @@ class ExpaRdSync
   def initialize
     self.rd_identifiers = {
         :test => 'test', #This is the identifier that should always be used during test phase
+        :form_podio_offline => 'form-podio-offline',
         :expa => 'expa',
         :open => 'open',
         :landing_0 => 'completou-cadastro',
@@ -23,14 +24,14 @@ class ExpaRdSync
     }
   end
 
-  def list_people #TODO testar com mock
+  def list_people
     setup_expa_api
     params = {'per_page' => 100}
     total_items = EXPA::Peoples.total_items
     total_pages = total_items / params['per_page']
     total_pages = total_pages + 1 if total_items % params['per_page'] > 0
 
-    for i in 1..total_pages
+    for i in 1...total_pages
       params['page'] = i
       people = EXPA::Peoples.list_by_param(params)
       people.each do |xp_person|
@@ -39,7 +40,23 @@ class ExpaRdSync
     end
   end
 
-  def list_open #TODO testar com mock
+  def list_applications
+    setup_expa_api
+    params = {'per_page' => 100}
+    total_items = EXPA::Applicaations.total_items
+    total_pages = total_items / params['per_page']
+    total_pages = total_pages + 1 if total_items % params['per_page'] > 0
+
+    for i in 1...total_pages
+      params['page'] = i
+      applications = EXPA::Applications.list_by_param(params)
+      applications.each do |xp_application|
+        update_db_applications(xp_application)
+      end
+    end
+  end
+
+  def list_open
     setup_expa_api
     time = Time.now - 10*60 # 10 minutes windows
     people = EXPA::Peoples.list_everyone_created_after(time)
@@ -3081,6 +3098,41 @@ class ExpaRdSync
     end
   end
 
+  def rd_from_podio_offline_lead
+    Podio.setup(:api_key => ENV['PODIO_API_KEY'], :api_secret => ENV['PODIO_API_SECRET'])
+    Podio.client.authenticate_with_credentials(ENV['PODIO_2_USERNAME'], ENV['PODIO_2_PASSWORD'])
+
+    attributes = {:sort_by => 'last_edit_on'}
+    app_id = 14573133 # App ORS oGCDP from Space Leads oGCDP
+    attributes[:filters] = {118893658 => 1, 'created_on' =>{'from' => (Time.now - 1.day).strftime('%Y-%m-%d %H:%M:%S'), 'to' => (Time.now + 1.day).strftime('%Y-%m-%d %H:%M:%S')}}
+
+    response = Podio.connection.post do |req|
+      req.url "/item/app/#{app_id}/filter/"
+      req.body = attributes
+    end
+
+    items = response.body['items']
+
+    items.each do |item|
+      mail_index = item['fields'].count
+      for i in 0...item['fields'].count
+        mail_index = i if item['fields'][i]['external_id'] == 'email'
+      end
+      unless mail_index == item['fields'].count
+        begin
+          Podio::Item.update(item['item_id'], {:fields => {'enviado-para-rd-station-bazicon' => 2}})
+          person = ExpaPerson.new
+          person.xp_email = item['fields'][mail_index]['values'][0]['value']
+          send_to_rd(person, nil, self.rd_identifiers[:form_podio_offline], nil)
+          person = nil
+        rescue => exception
+          puts exception.to_s
+        end
+      end
+      puts item
+    end
+  end
+
   #TODO: Delete after migrate everything to Bazicon/EXPA and do not use Podio anymore
   def podio_helper_find_item_by_unique_id(unique_id, option)
     attributes = {:sort_by => 'last_edit_on'}
@@ -3124,7 +3176,7 @@ class ExpaRdSync
         person.update_from_expa(xp_person)
         person.save
         case person.xp_status
-          when 'in_progress' then send_to_rd(person, nil, self.rd_identifiers[:in_progress], nil)
+          when 'in_progress'then send_to_rd(person, nil, self.rd_identifiers[:in_progress], nil)
           when 'accepted' then send_to_rd(person, nil, self.rd_identifiers[:accepted], nil)
           when 'approved' then send_to_rd(person, nil, self.rd_identifiers[:approved], nil)
           else nil
@@ -3135,8 +3187,8 @@ class ExpaRdSync
     setup_expa_api
     applications = EXPA::Peoples.get_applications(person.xp_id)
     unless applications.empty?
-      applications.each do |application|
-        update_db_applications(application)
+      applications.each do |xp_application|
+        update_db_applications(xp_application)
       end
     end
     send_to_rd(person, nil, self.rd_identifiers[:expa], nil) #TODO enviar tambem applications (somente quanto ta accepted, match, relized, complted)
