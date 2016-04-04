@@ -14,9 +14,92 @@ class DigitalTransformationController < ApplicationController
     end
   end
 
+  # GET /cadastro
+  def sign_up
+    set_fields
+  end
+
+  # POST /
+  def new_user
+    unless params['commit']=='REGISTER' ||
+        params['controller']=='digital_transformation' ||
+        params['action']=='new_user'
+      redirect_to 'http://aiesec.org.br'
+    end
+    error = 0
+    if params['form_data']['email'].blank?
+      error = error + (2 ** 0)
+    else
+      person = ExpaPerson.find_by_xp_email(params['form_data']['email'])
+      if ExpaPerson.exists?(person)
+        error = error + (2 ** 1)
+      end
+      person = ExpaPerson.find_by_xp_aiesec_email(params['form_data']['email'])
+      if ExpaPerson.exists?(person)
+        error = error + (2 ** 1)
+      end
+    end
+    if params['form_data']['first-name'].blank?
+      error = error + (2 ** 2)
+    end
+    if params['form_data']['last-name'].blank?
+      error = error + (2 ** 3)
+    end
+    if params['form_data']['password'].blank?
+      error = error + (2 ** 4)
+    end
+    if params['form_data']['lc_input'] == '0'
+      error = error + (2 ** 5)
+    end
+    if params['form_data']['escolaridade'] == '0'
+      error = error + (2 ** 6)
+    end
+    if (params['form_data']['escolaridade'] == '4' ||
+        params['form_data']['escolaridade'] == '5' ||
+        params['form_data']['escolaridade'] == '6') &&
+      params['form_data']['universidade'] == '0'
+      error = error + (2 ** 7)
+    end
+    if (params['form_data']['escolaridade'] == '4' ||
+        params['form_data']['escolaridade'] == '5' ||
+        params['form_data']['escolaridade'] == '6') &&
+        params['form_data']['curso'] == '0'
+      error = error + (2 ** 8)
+    end
+    if params['form_data']['conheceu_aiesec'] == '0'
+      error = error + (2 ** 9)
+    end
+    if params['form_data']['terms'] == '0'
+      error = error + (2 ** 10)
+    end
+    if error > 0
+      redirect_to '/cadastro?error=' + error.to_s
+    else
+      url = 'https://opportunities.aiesec.org/auth'
+
+      agent = Mechanize.new {|a| a.ssl_version, a.verify_mode = 'TLSv1',OpenSSL::SSL::VERIFY_NONE}
+      page = agent.get(url)
+
+      auth_form = page.forms[1]
+      auth_form.field_with(:name => 'user[email]').value = params['form_data']['email']
+      auth_form.field_with(:name => 'user[first_name]').value = params['form_data']['first-name']
+      auth_form.field_with(:name => 'user[last_name]').value = params['form_data']['last-name']
+      auth_form.field_with(:name => 'user[password]').value = params['form_data']['password']
+      auth_form.field_with(:name => 'user[country]').value = 'Brazil'
+      auth_form.field_with(:name => 'user[mc]').value = '1606'
+      auth_form.field_with(:name => 'user[lc]').value = @how_got_to_know_aiesec[params['form_data']['lc_input'].to_i][1]['ids'].first
+      auth_form.field_with(:name => 'user[lc_input]').value = @how_got_to_know_aiesec[params['form_data']['lc_input'].to_i].first
+
+      begin
+        page = agent.submit(auth_form, auth_form.buttons.first)
+      rescue => exception
+        puts exception.to_s
+      end
+    end
+  end
+
   # GET /complete_cadastro_update_thank
   def thank
-
   end
 
   # POST /
@@ -197,7 +280,70 @@ class DigitalTransformationController < ApplicationController
                                   'Educacional',
                                   'Tecnologia da Informacao',
                                   'Gestao']
-    @entities = ['-',
+    @hash_entities_podio_expa = {'CL' => {'ids' => ['EXPA_ID', 'PODIO_ITEM_ID'], 'programs' => ['oGIP','oGCDP']},
+                                 'ALFENAS' => {'ids' => [479,362627844], 'programs' => []},
+                                 'ARACAJU' => {'ids' => [100,306817550], 'programs' => []},
+                                 'ARARAQUARA' => {'ids' => [435,362628166], 'programs' => []},
+                                 'BALNEARIO CAMBORIU' => {'ids' => [1731,306820346], 'programs' => []},
+                                 'BAURU' => {'ids' => [32,306825623], 'programs' => []},
+                                 'BELEM' => {'ids' => [286,362628356], 'programs' => []},
+                                 'BELO HORIZONTE' => {'ids' => [1248,306810804], 'programs' => []},
+                                 'BLUMENAU' => {'ids' => [232,362628487], 'programs' => []},
+                                 'BRASILIA' => {'ids' => [1300,306812018], 'programs' => []},
+                                 'CAMPINA GRANDE' => {'ids' => [541,362628658], 'programs' => []},
+                                 'CAMPO GRANDE' => {'ids' => [1766,306825376], 'programs' => []},
+                                 'CAMPO MOURAO' => {'ids' => [723,362629024], 'programs' => []},
+                                 'CHAPECO' => {'ids' => [283,306822862], 'programs' => []},
+                                 'CUIABA' => {'ids' => [1248,336444212], 'programs' => []},
+                                 'CURITIBA' => {'ids' => [1178,306813088], 'programs' => []},
+                                 'FLORIANOPOLIS' => {'ids' => [988,306811093], 'programs' => []},
+                                 'FORTALEZA' => {'ids' => [286,306810283], 'programs' => []},
+                                 'FRANCA' => {'ids' => [284,306818036], 'programs' => []},
+                                 'GOIANIA' => {'ids' => [434,306817719], 'programs' => []},
+                                 'ITA' => {'ids' => [1368,306817098], 'programs' => []},
+                                 'ITAJUBA' => {'ids' => [479,306822498], 'programs' => []},
+                                 'JOAO PESSOA' => {'ids' => [1666,306824849], 'programs' => []},
+                                 'JOINVILLE' => {'ids' => [232,306818877], 'programs' => []},
+                                 'LIMEIRA' => {'ids' => [564,335437867], 'programs' => []},
+                                 'LONDRINA' => {'ids' => [437,306817769], 'programs' => []},
+                                 'MACEIO' => {'ids' => [286,362629308], 'programs' => []},
+                                 'MANAUS' => {'ids' => [231,306817297], 'programs' => []},
+                                 'MARILIA' => {'ids' => [437,362629660], 'programs' => []},
+                                 'MARINGA' => {'ids' => [723,306811055], 'programs' => []},
+                                 'NATAL' => {'ids' => [541,362629783], 'programs' => []},
+                                 'PASSO FUNDO' => {'ids' => [958,362630011], 'programs' => []},
+                                 'PELOTAS' => {'ids' => [148,306820564], 'programs' => []},
+                                 'PIRASSUNUNGA' => {'ids' => [435,362630097], 'programs' => []},
+                                 'POCOS DE CALDAS' => {'ids' => [1003,362630236], 'programs' => []},
+                                 'PORTO ALEGRE' => {'ids' => [854,306810913], 'programs' => []},
+                                 'RECIFE' => {'ids' => [541,306810735], 'programs' => []},
+                                 'RIBEIRAO PRETO' => {'ids' => [467,306820937], 'programs' => []},
+                                 'RIO DE JANEIRO' => {'ids' => [777,306811119], 'programs' => []},
+                                 'SALVADOR' => {'ids' => [1121,306811026], 'programs' => []},
+                                 'SANTA CRUZ DO SUL' => {'ids' => [285,306825793], 'programs' => []},
+                                 'SANTA MARIA' => {'ids' => [958,306813159], 'programs' => []},
+                                 'SANTAREM' => {'ids' => [909,353882059], 'programs' => []},
+                                 'SANTOS' => {'ids' => [1816,306819356], 'programs' => []},
+                                 'SAO CARLOS' => {'ids' => [435,306812438], 'programs' => []},
+                                 'SAO JOSE DO RIO PRETO' => {'ids' => [284,353885407], 'programs' => []},
+                                 'SAO PAULO - UNIDADE ABC' => {'ids' => [233,340039892], 'programs' => []},
+                                 'SAO PAULO - UNIDADE ESPM' => {'ids' => [436,306812929], 'programs' => []},
+                                 'SAO PAULO - UNIDADE GETULIO VARGAS' => {'ids' => [943,306822659], 'programs' => []},
+                                 'SAO PAULO - UNIDADE INSPER' => {'ids' => [233,306817462], 'programs' => []},
+                                 'SAO PAULO - UNIDADE MACKENZIE' => {'ids' => [436,362629397], 'programs' => []},
+                                 'SAO PAULO - UNIDADE PUC' => {'ids' => [288,306817495], 'programs' => []},
+                                 'SAO PAULO - UNIDADE USP' => {'ids' => [1003,306811162], 'programs' => []},
+                                 'SOROCABA' => {'ids' => [230,306825137], 'programs' => []},
+                                 'TERESINA' => {'ids' => [286,340037977], 'programs' => []},
+                                 'UBERABA' => {'ids' => [287,362630742], 'programs' => []},
+                                 'UBERLANDIA' => {'ids' => [287,306813291], 'programs' => []},
+                                 'VALE DO PARAIBA' => {'ids' => [1368,306817098], 'programs' => []},
+                                 'VALE DO SAO FRANCISCO' => {'ids' => [1649,362630905], 'programs' => []},
+                                 'VARGINHA' => {'ids' => [479,362630969], 'programs' => []},
+                                 'VICOSA' => {'ids' => [1248,362631010], 'programs' => []},
+                                 'VITORIA' => {'ids' => [909,306810868], 'programs' => []},
+                                 'VOLTA REDONDA' => {'ids' => [289,335438552], 'programs' => []}}
+    @entities = ['AIESEC mais próxima',
                  'ALFENAS',
                  'ARACAJU',
                  'ARARAQUARA',
@@ -260,7 +406,7 @@ class DigitalTransformationController < ApplicationController
                  'VICOSA',
                  'VITORIA',
                  'VOLTA REDONDA']
-    @how_got_to_know_aiesec = ['-',
+    @how_got_to_know_aiesec = ['Como conheceu a AIESEC?',
                                'Facebook',
                                'Indicacao de Amigos ou Parentes',
                                'Google',
@@ -277,14 +423,14 @@ class DigitalTransformationController < ApplicationController
                                'Campanha de indicacao',
                                'Youth Speak',
                                'Outros']
-    @study_level = ['-',
+    @study_level = ['Escolaridade',
                     'Ensino Fundamental',
                     'Ensino Medio',
                     'Curso Tecnico',
                     'Ensino Superior',
                     'Mestrado',
                     'Doutorado']
-    @universities = ['-',
+    @universities = ['Universidade',
                      '28 de Agosto - Faculdade 28 de Agosto de Ensino e Pesquisa',
                      'ADJETIVO-CETEP - FACULDADE ADJETIVO CETEP',
                      'AEMS - FACULDADES INTEGRADAS DE TRES LAGOAS',
@@ -2894,7 +3040,7 @@ class DigitalTransformationController < ApplicationController
                       'VERTICE - FACULDADE VERTICE',
                       'VIZIVALI - FACULDADE VIZINHANCA VALE DO IGUACU',
                       'WLASAN - FACULDADE PROF. WLADEMIR DOS SANTOS']
-    @courses = ['-',
+    @courses = ['Curso',
                 'Administracao',
                 'Administracao De Cooperativas E Empresas Rurais',
                 'Administracao Legislativa',
