@@ -1,0 +1,7 @@
+/tmp/
+config/local_env.yml
+test/integration/users.csv
+*.keep
+log/development.log
+config/secrets.yml
+config/initializers/

@@ -9,26 +9,41 @@ Rails.application.routes.draw do
   post 'authentication/error'
 
   get 'authentication/navigate'
-  post 'authentication/navigate'
+	post 'authentication/navigate'
 
-  get 'authentication/files'
+	get 'authentication/files'
   post 'authentication/files'
 
-  get 'authentication/navigation_params'
-  post 'authentication/navigation_params'
+	get 'authentication/navigation_params'
+	post 'authentication/navigation_params'
+
+  post 'authentication/selected_buttons'
+
+  post 'upload' => 'authentication#upload'
+
+  get 'refresh' => 'authentication#refresh'
+
+  post 'rename' => 'authentication#refresh'
+
+  post 'authentication/edit'
 
 
+  post 'move' => 'authentication#move'
+
+  post 'remove' => 'authentication#remove'
+
+  post 'authentication/new_folder'
+  
   get 'login1' => 'sessions#new'
 
   post 'sessions/create'
-
+  
   get 'logout' => 'sessions#destroy'
   delete 'logout' => 'sessions#destroy'
-
+  
   get 'error' => 'sessions#error'
 
-
-
+  post 'back' => 'authentication#go_back'
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

@@ -8,22 +8,77 @@ require 'json'
 # @author Mauro Victor
 class AuthenticationController < ApplicationController
 # Class that control the Authenticatiom system and its views
+  
+  
 
   layout 'login', :only => [:login]
+  
   include AuthenticationHelper #Use this module of helpers
+  
+  APP_KEY = 'r4j62oc1pjtduag'
+  APP_SECRET = '7oy7b8h87j7pmtg'
 
-  APP_KEY = '1g9mnjegs1l7j3m'
-  APP_SECRET = 'glhnoqva181wmpa'
+  
 
-  #def login
 
-  #end
-
-  def error
-
+  def welcome
+    $client = DropboxClient.new("Euuw5wSC1UAAAAAAAAAAB7srD5VuQIx79Pehcie30V_uNicxhXCqKTQJc70_dvh7")
+    $tags_id = []
   end
 
-  # Takes the params for navigation
+  
+
+  def files(search=params[:search])
+    
+    join = 'JOIN users u ON u.id = archives.user_id'
+    select = "archives.id as id, archives.name as file_name, u.name as owner, public, show , user_id" +
+    " , archives.created_at as created_at , archives.updated_at as updated_at   "
+    
+    if session[:position] == 'MC'
+      where =""
+      @committees = ExpaOffice.all
+    elsif session[:position] == 'EB'
+       where = " public = true OR (public = false AND archives.xp_committee_id= " + session[:committee].to_s + " )"
+    else
+      where = "(public = true AND show=true) OR (public = false AND show=true AND archives.xp_committee_id= " + session[:committee].to_s + " )" 
+    end
+    if search == nil 
+        @archives = Archive.select(select).joins(join).where(where )
+    else
+      files_list = Archive.all.pluck(:name)
+      search_list = Array.new
+      files_list.each do |f|
+        search_list << f.to_s if f.to_s.include?(search)
+      end
+      if session[:position] == 'MC'
+         where =  "archives.name iLIKE '%" + search + "%'"
+      else
+        where = "(" + where + " )AND archives.name iLIKE '%" + search + "%'"
+      end
+      @archives = Archive.select(select).joins(join).where(where)
+    end
+  
+      @tags = Tag.all
+  end
+
+  def login 
+
+    if current_user
+      #request the expa's current user data
+      @request = "https://gis-api.aiesec.org:443/v1/current_person.json?access_token=#{session[:token]}"
+      resp = Net::HTTP.get_response(URI.parse(@request))
+      data = resp.body
+      @current_person = JSON.parse(data)
+      #Find the user on system
+      @user = User.find_by_email(params[:my_email])
+      redirect_to authentication_welcome_path
+    else
+      render 'login'
+    end
+  end
+
+
+  # Takes the params for navigation 
   # @param content [String] path of the actual directory
   # @param upload[String] upload file to be uploaded
   # @param new_folder_name [String] name of the new folder name in case the user fulfilled a form to create a new one
@@ -32,102 +87,133 @@ class AuthenticationController < ApplicationController
   # @param move [Array] Origin path and target path for the file will be moved
   # @param page [Number] Number of the page passed by the user through it's navigation
   # @param remove [String] Path of file to be removed on the request
-  def navigation_params (content=params[:parent_id], upload=params[:file], new_folder_name=params[:folder_name], files_array=params[:fil], rename=[params[:rename_new_name], params[:rename_old_name]], move= [params[:move_from], params[:move_to]], page=params[:page], remove=params[:to_remove])
-
+  def navigation_params (content=params[:parent_id])
     #Store the path into a global variable because this variable is necessary in others methods.
     #If it is being requested by Arquivos's link set the root as "/"
     if request.get?
-      $root = "/"
+      session[:dbox_path] = "/"
     else
-      $root = content
+      session[:dbox_path] = content
     end
-    #Takes the current page sent through the form at the view's end
-    #If it is being requested by Arquivos's link set the page as 1
-    if request.get?
-      $page = 1
-    else
-      $page = page.to_i
-    end
-    # Create new folder if the user submited the form to do it
-    unless new_folder_name == nil
-      @new_folder = new_folder_name
+    redirect_to authentication_files_path
+  end
+
+  def refresh 
+    recs = Archive.all.pluck(:name)
+    dbox_files = Array.new
+    root_metadata = $client.metadata(session[:dbox_path])['contents']
+
+    root_metadata.each do |file|
+      unless Archive.find_by_name(file['path'].split('/').last)
+        record = Archive.new
+        record.name = file['path'].split('/').last
+        record.path = session[:dbox_path]
+        record.dir = file['is_dir']
+        record.show = true
+        record.save
+      end
+      dbox_files << file['path'].split('/').last 
     end
 
-    #start the client from dropbox
-    $client = DropboxClient.new("siZpe-o98xoAAAAAAAAAl9HJEsrdDz0EPFebqJHr-oZryn0TL2aNhcGVSQvEjm71")
-
-    #Upload a file if the user submited the form to do it and added a file to the upload form
-    unless upload == nil || files_array.include?("#{upload.original_filename}")
-      #@dude = upload.original_filename
+    recs.each do |rec|
+      unless dbox_files.include?(rec)
+        Archive.find_by_name(rec).destroy
+      end
+    end
+    redirect_to authentication_files_path
+  end
+  
+  def upload(upload=params[:file], p_flag= params[:show], committeeId = params[:committeeId])
+    
+    unless upload == nil || Archive.find_by_name("#{upload.original_filename}")
       file = open(upload.path())
-      response = $client.put_file("#{$root}/#{upload.original_filename}", file)
       #Save a record with the data about who uploaded the file
       record = Archive.new
       record.name = upload.original_filename
-      record.owner = current_user.name
+      if !committeeId
+        committeeId = session[:committee]
+      end
+      if !p_flag
+        p_flag = true
+      end
+      
+      record.xp_committee_id = committeeId
+      record.user_id= session[:user_id]
+      record.public = p_flag
+      record.show = true
+      record.save
+      if $tags_id != nil
+        for t in $tags_id
+          archiveTag = ArchiveTag.new
+          archiveTag.tag_id = t
+          archiveTag.archive_id = record.id
+          archiveTag.save
+        end
+      end
+      response = $client.put_file("/#{record.id}.#{record.name.split(".").last}", file)
+    end
+    redirect_to authentication_files_path
+  end
+
+  def selected_buttons(tags_ids= params[:tags_ids])
+    $tags_id= tags_ids
+  end
+
+  def new_folder(new_folder=params[:folder_name])
+    unless new_folder == nil
+      record = Archive.new
+      record.name = new_folder
+      record.path = session[:dbox_path]
+      record.dir = true
       record.save
     end
-    #Rename the File if the user submited the form to do it
-    unless rename[0] == nil
-      $client.file_move("#{$root}/#{rename[1]}","#{$root}/#{rename[0]}")
-    end
-    #Create new folder if the user submited the form to do it
-    unless @new_folder == nil
-      $client.file_create_folder("#{$root}/#{@new_folder}")
-    end
-
-    #Move File if the user submited the form to do it
-    unless move[0] == nil || move[1] == nil
-      if move[1] == '..'
-        $client.file_move("#{move[0]}" , "#{$root.split('/')[1...-1].join}/#{move[0].split("/").last}" )
-      else
-        $client.file_move("#{move[0]}","#{$root}/#{move[1].strip}/#{move[0].split("/").last}")
-      end
-    end
-
-    unless remove == nil
-      $client.file_delete(remove)
-    end
-
-    #Stores the metadata's content to iterate later and create an array for files and another for directories
-    $root_metadata = $client.metadata($root)['contents']
-
-    #Creates the variables to store files and directories
-    $files = Array.new
-    $directories = Array.new
-
-
-    # iterate and create an array for files, for directories, creation and modification.
-    $root_metadata.each do |hash|
-      if hash["is_dir"] == false then
-        #Take all the attributes necessary to show the files informations [path, creation-time, modified-time, lenght, type]
-        $files << [hash["path"], date_format(hash['client_mtime']), date_format(hash['modified']), unit(hash["bytes"]),get_type(hash["path"]), hash["revision"]]
-
-      else
-        $directories << hash["path"]
-      end
-    end
-
-    $show=($directories+$files)
-
-    #Organize the pages
-    $offset = 10
-    $pages = if $show.length % $offset == 0 then
-               ($show.length/$offset)
-             else
-               ($show.length/$offset)+1
-             end
-
     redirect_to authentication_files_path
+  end
 
+  def rename(rename=[params[:rename_new_name], params[:rename_old_name]])
+    unless rename[0] == nil
+      $client.file_move("#{session[:dbox_path]}/#{rename[1]}","#{session[:dbox_path]}/#{rename[0]}")
+      record = Archive.find_by_name(rename[1])
+      record.name = rename[0]
+      record.save
+    end
+    redirect_to authentication_files_path
+  end
+
+  def move(move=[params[:move_to], params[:move_from]])
+    record = Archive.find_by_name(move[1])
+    record.path = (session[:dbox_path] == "/") ? "/#{move[0]}/" : "#{session[:dbox_path]}/#{move[0]}/"
+    record.save
+    redirect_to authentication_files_path
+  end
+
+  def edit(edit_id= params[:id])
+    allTags= Tag.all
+    @archive_tags =[]
+    sqlSelectedTags = ArchiveTag.select("tag_id").where('archive_id=' + edit_id) 
+    selectedTags = []
+    for t in sqlSelectedTags 
+      selectedTags << t.tag_id
+    end
+    for t in allTags
+      if selectedTags.include? t.id
+        @archive_tags  << {:id => t.id, :selected => true , :tag_name => t.name }
+      else 
+        @archive_tags << {:id => t.id, :selected => false , :tag_name => t.name }
+      end
+    end
   end
 
 
-  def files
+  def remove(remove=params[:to_remove])
+    record = Archive.find_by_name(remove)
+    record.show = false
+    record.save
+    redirect_to authentication_files_path
   end
-
+  
   helper_method :current_user
-
+  
   #define the current user
   def current_user
     @current_user ||= User.find(session[:user_id]) if session[:user_id]
@@ -138,5 +224,10 @@ class AuthenticationController < ApplicationController
     redirect_to '/login' unless $current_user
   end
 
-
+  def go_back
+    session[:dbox_path] = session[:dbox_path].split("/")[0...-1].join("/") + "/"
+    redirect_to authentication_files_path
+  end
+  
+  
 end
