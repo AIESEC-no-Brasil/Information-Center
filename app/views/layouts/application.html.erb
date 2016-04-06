@@ -73,14 +73,14 @@
               <label class="mdl-textfield__label" for="search">Enter your query...</label>
             </div>
           </div>-->
+          
           <span> <%= link_to '<i class="mdl-color-text material-icons" role="presentation">arrow_back</i>'.html_safe, authentication_files_path, method: :post %></span>
           <span> 
-
+          
           </span>
-            <%= form_tag(controller: :authentication, action: :files, html: {id: 'search_form'}) do %> 
+            <%= form_tag "files", :remote => true do %> 
               <%= label_tag "Pesquisa"%>
               <%= text_field_tag "search" %>
-
             <% end %>
           </span>
           <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="btninfo">
@@ -148,6 +148,7 @@
     <!--END General -->
     <%= javascript_include_tag "material.min.js" %>
     <%= javascript_include_tag "jquery-2.1.4.min.js" %>
+    
 
 
   </body>

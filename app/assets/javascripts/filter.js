@@ -1,3 +1,4 @@
+
 $("#search").keyup(function(){
 	
 	$('.file-name:not(:contains('+$('#search').val()+'))').parent().parent().hide();
@@ -6,17 +7,20 @@ $("#search").keyup(function(){
 });
 
 
+
 //$.getScript('/authentication/filter.js');
 /*
-$('form').submit(function() {  
+$('#search').keyup(function() {  
     var valuesToSubmit = $(this).serialize();
     $.ajax({
         type: "POST",
-        url: $(this).attr('action'), //sumbits it to the given url of the form
+        url: "/authentication/files", //sumbits it to the given url of the form
         data: {search: $("#search").val()},
         //dataType: "JSON" // you want a difference between normal and ajax-calls, and json is standard
-    }).success(function(json){
-        console.log("success", json);
+    }).success(function(data){
+        console.log("success");
+        console.log(data);
+
     });
     return false; // prevents normal behaviour
 });

@@ -5,10 +5,11 @@
 <html lang="pt">
 
   <head>
+    <%= csrf_meta_tags %>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Arquivos</title>
-        
+      
     <%= stylesheet_link_tag "https://storage.googleapis.com/code.getmdl.io/1.0.5/material.indigo-light_blue.min.css" %>
     <%= stylesheet_link_tag "https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en" %>
     <%= stylesheet_link_tag "https://fonts.googleapis.com/icon?family=Material+Icons" %>
@@ -27,6 +28,7 @@
     
     
     
+    
 
   </head>
 
@@ -38,7 +40,11 @@
           <div id ="main-content" class="mdl-grid mdl-grid--no-spacing">
 
             <div id="arquivo">
+              
               <div class="mdl-cell mdl-cell--12-col mdl-color--indigo-900 mdl-color-text--grey-100">
+              <% @tags.each do |t| %>
+                <span><%= button_tag t.name, class: "filter-button" %></span>
+              <% end %>
               <h1>Arquivos</h1>
               <span><%= session[:dbox_path]%></span> 
 
@@ -48,6 +54,7 @@
                   <li>
                                   
               <!--UPLOAD FILES -->  
+
                 <%= link_to("javascript:fadeT()", :class => "mdl-button mdl-js-ripple-effect mdl-js-button mdl-button--fab mdl-color--accent fab-top-right") do %>
                    <i class="material-icons mdl-color-text--white">file_upload</i>
                 <% end%>
@@ -97,6 +104,7 @@
 
                 </tr>
               </thead>
+              
               <!-- SHOW THE DIRECTORIES AND FILES FROM DROPBOX -->
               <% @archives.each_with_index do |a,index| %>
                 <tbody>
@@ -157,13 +165,14 @@
                   <!-- Tamanho -->
                   <td> </td>
                   <!-- Download-->
-                  <td>
-                    
-                    
-                    <%= link_to($client.media("#{a.id}.#{a.name.split(".").last}")['url'], :class => "mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-button--colored")  do %>
+                  <!--
+                  <td> 
+                    <%# link_to($client.media("#{a.id}.#{a.name.split(".").last}")['url'], :class => "mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon mdl-button--colored")  do %>
                       <i class="material-icons">get_app</i>
-                    <% end%>
+                    <%# end%>
                   </td>
+                  -->
+                  <td> </td>
 
                   <td>
                     <%= form_tag :action => 'remove' do%>
@@ -181,9 +190,13 @@
                   </td>
               <% end %>
               <% end %>
+              
               </tbody>
               </table>
           <!-- Pages' links -->
+          <div class="filtered-results">
+
+          </div>
           </div>
         </div>
       </div>    
@@ -200,17 +213,32 @@
         <strong>Suba um arquivo</strong> 
       </div>
       <div class="mdl-card__actions">
-        <%= form_tag({action: :upload}, multipart: true) do %>
-          <div class="mdl-card__actions">
+        <%= form_tag({action: :upload}, {:onSubmit => 'checkSelectedTags()', multipart: true}) do %>
+          <div class="mdl-card__actions"id="form-body">
           <%= file_field_tag 'file' %> <br/>
+          <% if session[:position] == 'EB' || session[:position] == 'MC'  %>
+           <%= radio_button_tag(:show, true) %>
+           <%= label_tag(:acess_field, "Público") %>
+           <%= radio_button_tag(:show, false) %>
+           <%= label_tag(:acess_field, "Privado") %>
+          <% end %> 
+          </div>
+          <% tags_ids = [] %>
+          
+          <div>
+            <ul>
+            <% @tags.each do |t| %>
+               <%= button_to t.name, "javascript:buttonSelected(event)", class: "select-button", value: t.id %>
+            <% end %>
+            </ul> 
           </div>
           <div class="mdl-card__actions">
           <%= submit_tag "Subir" %>
           </div>
         <% end %>
       </div>
-
-
+​
+​
   </div>
 
   <div class="mdl-card" id="modal_to_move">
@@ -266,5 +294,7 @@
     <%= javascript_include_tag "upload.js" %>
     <%= javascript_include_tag "move_file_modal.js" %>
     <%= javascript_include_tag "filter.js" %>
+    <%= javascript_include_tag "check_change" %>
+    
   
 </html>

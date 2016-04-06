@@ -649,10 +649,10 @@ html,body {
 #modal{
   position: absolute;
   left: 40%;
-  top: 40%;
+  top: 10%;
   z-index: 10;
   width: 500px;
-  height: 250px;
+  height: 900px;
   background-color: #ffff00;
 
 }
@@ -677,4 +677,9 @@ html,body {
   height: 250px;
   background-color: #BAD9E3;
 
+}
+
+.button-checked{
+  background-image:none;
+  background-color: orange;
 }

@@ -18,19 +18,12 @@ class AuthenticationController < ApplicationController
 
   def welcome
     $client = DropboxClient.new("Euuw5wSC1UAAAAAAAAAAB7srD5VuQIx79Pehcie30V_uNicxhXCqKTQJc70_dvh7")
+    $tags_id = []
   end
 
-  def files
-    if params[:search] == nil 
-      @archives = Archive.where({show: true, path: session[:dbox_path]})
-    else
-      files_list = Archive.all.pluck(:name)
-      search_list = Array.new
-      files_list.each do |f|
-        search_list << f.to_s if f.to_s.include?(params[:search])
-      end
-      @archives = Archive.where({show: true, path: session[:dbox_path], name: search_list})
-    end
+  def files(search=params[:search])
+    @archives = Archive.where({show: true, path: session[:dbox_path]})
+    @tags = Tag.all
   end
 
   def login 
@@ -69,30 +62,30 @@ class AuthenticationController < ApplicationController
     redirect_to authentication_files_path
   end
 
-  def refresh 
-    recs = Archive.all.pluck(:name)
-    dbox_files = Array.new
-    root_metadata = $client.metadata(session[:dbox_path])['contents']
-
-    root_metadata.each do |file|
-      unless Archive.find_by_name(file['path'].split('/').last)
-        record = Archive.new
-        record.name = file['path'].split('/').last
-        record.path = session[:dbox_path]
-        record.dir = file['is_dir']
-        record.show = true
-        record.save
-      end
-      dbox_files << file['path'].split('/').last 
-    end
-
-    recs.each do |rec|
-      unless dbox_files.include?(rec)
-        Archive.find_by_name(rec).destroy
-      end
-    end
-    redirect_to authentication_files_path
-  end
+#  def refresh 
+#    recs = Archive.all.pluck(:name)
+#    dbox_files = Array.new
+#    root_metadata = $client.metadata(session[:dbox_path])['contents']
+#
+#    root_metadata.each do |file|
+#      unless Archive.find_by_name(file['path'].split('/').last)
+#        record = Archive.new
+#        record.name = file['path'].split('/').last
+#        record.path = session[:dbox_path]
+#        record.dir = file['is_dir']
+#        record.show = true
+#        record.save
+#      end
+#      dbox_files << file['path'].split('/').last 
+#  end
+#
+#    recs.each do |rec|
+#      unless dbox_files.include?(rec)
+#        Archive.find_by_name(rec).destroy
+#      end
+#    end
+#    redirect_to authentication_files_path
+#  end
   
   def upload(upload=params[:file])
     unless upload == nil || Archive.find_by_name("#{upload.original_filename}")
@@ -106,6 +99,12 @@ class AuthenticationController < ApplicationController
       record.show = true
       record.dir = false
       record.save
+      for t in $tags_id
+        archiveTag = ArchiveTag.new
+        archiveTag.tag_id = t
+        archiveTag.archive_id = record.id
+        archiveTag.save
+      end
       response = $client.put_file("/#{record.id}.#{record.name.split(".").last}", file)
     end
     redirect_to authentication_files_path
@@ -163,21 +162,8 @@ class AuthenticationController < ApplicationController
     redirect_to authentication_files_path
   end
 
-  def filter(search=params[:search])
-    if search == nil 
-      @archives = Archive.where({show: true, path: session[:dbox_path]})
-    else
-      files_list = Archive.all.pluck(:name)
-      search_list = Array.new
-      files_list.each do |f|
-        search_list << f.to_s if f.to_s.include?(search)
-      end
-      @archives = Archive.where({show: true, path: session[:dbox_path], name: search_list})
-    end
-    respond_to do |format|
-      format.js
-      format.html
-    end
+  def selected_buttons(tags_ids=params[:tags_ids])
+    $tags_id = tags_ids
   end
 
 

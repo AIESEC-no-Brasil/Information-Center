@@ -42,6 +42,8 @@ Rails.application.routes.draw do
 
   post 'authentication/filter'
 
+  post 'authentication/selected_buttons'
+
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
